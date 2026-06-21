@@ -2,8 +2,6 @@
 #  MediMind - Medicine Reminder App
 #  Python Midterm Project
 #  Uses: tkinter (built-in), threading, datetime
-#  Install plyer for desktop notifications:
-#      pip install plyer
 # ============================================================
 
 import tkinter as tk
