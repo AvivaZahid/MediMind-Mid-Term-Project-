@@ -1,16 +1,9 @@
-# ============================================================
-#  MediMind - Medicine Reminder App
-#  Python Midterm Project
-#  Uses: tkinter (built-in), threading, datetime
-# ============================================================
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 import time
 import threading
 from datetime import datetime, timedelta
 
-# Optional: desktop notifications (install with: pip install plyer)
 try:
     from plyer import notification
     PLYER_AVAILABLE = True
@@ -18,9 +11,6 @@ except ImportError:
     PLYER_AVAILABLE = False
 
 
-# ─────────────────────────────────────────────────────────────
-#  Colour Palette
-# ─────────────────────────────────────────────────────────────
 BG_MAIN      = "#f0f4f8"
 BG_CARD      = "#ffffff"
 BG_HEADER    = "#1a73e8"
@@ -51,28 +41,21 @@ class MedicineReminderApp:
         self.root.configure(bg=BG_MAIN)
         self.root.resizable(True, True)
 
-        # ── App State ──────────────────────────────────────────
         self.medicines: list[dict] = []
         self.running = True
-        self._next_id = 0          # auto-increment ID for each medicine
-
-        # ── Build UI ───────────────────────────────────────────
+        self._next_id = 0          
+        
         self._configure_styles()
         self._build_header()
         self._build_input_card()
         self._build_table_card()
         self._build_status_bar()
 
-        # ── Background reminder thread ─────────────────────────
         t = threading.Thread(target=self._reminder_loop, daemon=True)
         t.start()
 
-        # ── Live clock update ──────────────────────────────────
         self._tick_clock()
 
-    # ─────────────────────────────────────────────────────────
-    #  Style Configuration
-    # ─────────────────────────────────────────────────────────
     def _configure_styles(self):
         style = ttk.Style(self.root)
         style.theme_use("clam")
@@ -83,32 +66,27 @@ class MedicineReminderApp:
         style.configure("Card.TLabel",    background=BG_CARD,   font=FONT_NORMAL, foreground=COLOR_DARK)
         style.configure("Heading.TLabel", background=BG_CARD,   font=FONT_HEADING, foreground=COLOR_DARK)
 
-        # Primary button (blue)
         style.configure("Primary.TButton",
                          font=FONT_HEADING, foreground=FG_WHITE,
                          background=COLOR_BLUE, borderwidth=0, padding=(12, 6))
         style.map("Primary.TButton",
                   background=[("active", "#1558b0"), ("pressed", "#0d47a1")])
 
-        # Danger button (red)
         style.configure("Danger.TButton",
                          font=FONT_NORMAL, foreground=FG_WHITE,
                          background=COLOR_RED, borderwidth=0, padding=(10, 5))
         style.map("Danger.TButton",
                   background=[("active", "#c0392b"), ("pressed", "#a93226")])
 
-        # Test button (orange)
         style.configure("Test.TButton",
                          font=FONT_NORMAL, foreground=FG_WHITE,
                          background=COLOR_ORANGE, borderwidth=0, padding=(10, 5))
         style.map("Test.TButton",
                   background=[("active", "#d68910"), ("pressed", "#b7770d")])
 
-        # Entry
         style.configure("TEntry", fieldbackground=BG_CARD, font=FONT_NORMAL,
                          foreground=COLOR_DARK, borderwidth=1)
 
-        # Treeview
         style.configure("Treeview",
                          background=BG_CARD, fieldbackground=BG_CARD,
                          font=FONT_NORMAL, foreground=COLOR_DARK,
@@ -120,9 +98,6 @@ class MedicineReminderApp:
                   background=[("selected", "#d0e4ff")],
                   foreground=[("selected", COLOR_DARK)])
 
-    # ─────────────────────────────────────────────────────────
-    #  Header Bar
-    # ─────────────────────────────────────────────────────────
     def _build_header(self):
         header = tk.Frame(self.root, bg=BG_HEADER, height=70)
         header.pack(fill=tk.X, side=tk.TOP)
@@ -134,24 +109,18 @@ class MedicineReminderApp:
         tk.Label(header, text="Your Personal Medicine Reminder", font=FONT_SMALL,
                  bg=BG_HEADER, fg="#c8d8f8").pack(side=tk.LEFT, padx=0, pady=12)
 
-        # Live clock on the right
         self.clock_var = tk.StringVar(value="--:--:--")
         tk.Label(header, textvariable=self.clock_var, font=FONT_CLOCK,
                  bg=BG_HEADER, fg=FG_WHITE).pack(side=tk.RIGHT, padx=20)
 
-    # ─────────────────────────────────────────────────────────
-    #  Input Card
-    # ─────────────────────────────────────────────────────────
     def _build_input_card(self):
         card = tk.Frame(self.root, bg=BG_CARD, bd=0, relief="flat")
         card.pack(fill=tk.X, padx=20, pady=(14, 6))
 
-        # Card shadow effect via a slightly darker outer frame
         tk.Label(card, text="Add a New Medicine", font=FONT_HEADING,
                  bg=BG_CARD, fg=COLOR_DARK).grid(row=0, column=0, columnspan=6,
                                                   sticky=tk.W, padx=16, pady=(12, 6))
 
-        # ── Row 1: inputs ──────────────────────────────────────
         tk.Label(card, text="Medicine Name:", bg=BG_CARD, font=FONT_NORMAL,
                  fg=COLOR_DARK).grid(row=1, column=0, padx=(16, 4), pady=8, sticky=tk.W)
 
@@ -181,7 +150,6 @@ class MedicineReminderApp:
         time_entry.grid(row=1, column=5, padx=4, pady=8)
         time_entry.bind("<Return>", lambda e: self._add_medicine())
 
-        # ── Row 2: buttons ─────────────────────────────────────
         btn_frame = tk.Frame(card, bg=BG_CARD)
         btn_frame.grid(row=2, column=0, columnspan=6, sticky=tk.W, padx=12, pady=(0, 12))
 
@@ -194,13 +162,9 @@ class MedicineReminderApp:
         ttk.Button(btn_frame, text="⚡  Test Reminder Now",
                    style="Test.TButton", command=self._test_reminder).pack(side=tk.LEFT, padx=4)
 
-        # Hint label
         tk.Label(btn_frame, text="  Tip: Use 24-hour format, e.g. 08:00 or 14:30",
                  bg=BG_CARD, fg=COLOR_GRAY, font=FONT_SMALL).pack(side=tk.LEFT, padx=8)
 
-    # ─────────────────────────────────────────────────────────
-    #  Table Card
-    # ─────────────────────────────────────────────────────────
     def _build_table_card(self):
         card = tk.Frame(self.root, bg=BG_CARD)
         card.pack(fill=tk.BOTH, expand=True, padx=20, pady=6)
@@ -225,7 +189,6 @@ class MedicineReminderApp:
         self.tree.column("time",   width=130, anchor=tk.CENTER)
         self.tree.column("status", width=180, anchor=tk.CENTER)
 
-        # Row colour tags
         self.tree.tag_configure("pending",  background="#fef9e7")
         self.tree.tag_configure("taken",    background="#eafaf1", foreground=COLOR_GREEN)
         self.tree.tag_configure("missed",   background="#fdecea", foreground=COLOR_RED)
@@ -238,9 +201,6 @@ class MedicineReminderApp:
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-    # ─────────────────────────────────────────────────────────
-    #  Status Bar
-    # ─────────────────────────────────────────────────────────
     def _build_status_bar(self):
         bar = tk.Frame(self.root, bg=COLOR_LIGHT, height=28)
         bar.pack(fill=tk.X, side=tk.BOTTOM)
@@ -254,16 +214,10 @@ class MedicineReminderApp:
         tk.Label(bar, textvariable=self.count_var, bg=COLOR_LIGHT,
                  fg=COLOR_GRAY, font=FONT_SMALL).pack(side=tk.RIGHT, padx=12)
 
-    # ─────────────────────────────────────────────────────────
-    #  Live Clock
-    # ─────────────────────────────────────────────────────────
     def _tick_clock(self):
         self.clock_var.set(datetime.now().strftime("%H:%M:%S"))
         self.root.after(1000, self._tick_clock)
 
-    # ─────────────────────────────────────────────────────────
-    #  Add Medicine
-    # ─────────────────────────────────────────────────────────
     def _add_medicine(self):
         name     = self.med_name_var.get().strip()
         dosage   = self.med_dose_var.get().strip() or "As prescribed"
@@ -309,9 +263,6 @@ class MedicineReminderApp:
         self._update_count()
         self._set_status(f"✅  '{name}' added – reminder set for {time_str}.")
 
-    # ─────────────────────────────────────────────────────────
-    #  Remove Medicine
-    # ─────────────────────────────────────────────────────────
     def _remove_medicine(self):
         selected = self.tree.selection()
         if not selected:
@@ -330,9 +281,6 @@ class MedicineReminderApp:
             self._update_count()
             self._set_status(f"🗑  '{name}' removed from schedule.")
 
-    # ─────────────────────────────────────────────────────────
-    #  Test Reminder (fires immediately for the selected row)
-    # ─────────────────────────────────────────────────────────
     def _test_reminder(self):
         selected = self.tree.selection()
         if not selected:
@@ -344,16 +292,13 @@ class MedicineReminderApp:
         if med:
             self._fire_reminder(med, test=True)
 
-    # ─────────────────────────────────────────────────────────
-    #  Reminder Loop (background thread)
-    # ─────────────────────────────────────────────────────────
     def _reminder_loop(self):
         while self.running:
             now          = datetime.now()
             current_hhmm = now.strftime("%H:%M")
 
             for med in list(self.medicines):
-                # ── Initial reminder ──────────────────────────
+                
                 if (current_hhmm == med["time"]
                         and not med["taken"]
                         and not med["notified"]):
@@ -362,7 +307,6 @@ class MedicineReminderApp:
                     med["follow_up_time"] = follow_up.strftime("%H:%M")
                     self._fire_reminder(med)
 
-                # ── 30-minute follow-up ───────────────────────
                 if (med["follow_up_time"]
                         and current_hhmm == med["follow_up_time"]
                         and not med["taken"]
@@ -370,7 +314,6 @@ class MedicineReminderApp:
                     med["missed_asked"] = True
                     self.root.after(0, lambda m=med: self._ask_if_taken(m))
 
-                # ── Midnight reset ────────────────────────────
                 if current_hhmm == "00:00":
                     med["taken"]        = False
                     med["notified"]     = False
@@ -378,18 +321,14 @@ class MedicineReminderApp:
                     med["follow_up_time"] = None
                     self.root.after(0, lambda m=med: self._update_row(m, "⏳ Pending", "pending"))
 
-            time.sleep(30)   # poll every 30 seconds
+            time.sleep(30)  
 
-    # ─────────────────────────────────────────────────────────
-    #  Fire Reminder Notification
-    # ─────────────────────────────────────────────────────────
     def _fire_reminder(self, med: dict, test: bool = False):
         title   = "💊 Time for Your Medicine!" if not test else "💊 Test Reminder"
         message = (f"Please take  {med['name']}\n"
                    f"Dosage: {med['dosage']}\n"
                    f"Scheduled: {med['time']}")
 
-        # Desktop notification (if plyer is installed)
         if PLYER_AVAILABLE:
             try:
                 notification.notify(title=title, message=message,
@@ -397,13 +336,9 @@ class MedicineReminderApp:
             except Exception:
                 pass
 
-        # In-app popup (always shown)
         self.root.after(0, lambda: messagebox.showinfo(title, message))
         self._set_status(f"🔔  Reminder sent for '{med['name']}' at {med['time']}.")
 
-    # ─────────────────────────────────────────────────────────
-    #  Ask If Medicine Was Taken (30-min follow-up)
-    # ─────────────────────────────────────────────────────────
     def _ask_if_taken(self, med: dict):
         taken = messagebox.askyesno(
             "Did You Take Your Medicine?",
@@ -425,7 +360,6 @@ class MedicineReminderApp:
             self._update_row(med, "❌ Missed – Take Now!", "missed")
             self._set_status(f"⚠️  '{med['name']}' was missed. Please take it now!")
 
-            # Find the next upcoming medicine to remind about
             next_med = self._get_next_medicine(med)
             extra    = ""
             if next_med:
@@ -438,9 +372,6 @@ class MedicineReminderApp:
                 f"Please take it as soon as possible!{extra}"
             )
 
-    # ─────────────────────────────────────────────────────────
-    #  Helper: Get Next Upcoming Medicine
-    # ─────────────────────────────────────────────────────────
     def _get_next_medicine(self, current_med: dict) -> dict | None:
         now_str = datetime.now().strftime("%H:%M")
         upcoming = [
@@ -453,29 +384,20 @@ class MedicineReminderApp:
             return None
         return min(upcoming, key=lambda m: m["time"])
 
-    # ─────────────────────────────────────────────────────────
-    #  Helper: Update a Treeview Row
-    # ─────────────────────────────────────────────────────────
     def _update_row(self, med: dict, status_text: str, tag: str):
         try:
             self.tree.item(str(med["id"]),
                            values=(med["name"], med["dosage"], med["time"], status_text),
                            tags=(tag,))
         except tk.TclError:
-            pass   # row may have been deleted
+            pass   
 
-    # ─────────────────────────────────────────────────────────
-    #  Helper: Find Medicine by ID
-    # ─────────────────────────────────────────────────────────
     def _find_med(self, med_id: int) -> dict | None:
         for m in self.medicines:
             if m["id"] == med_id:
                 return m
         return None
 
-    # ─────────────────────────────────────────────────────────
-    #  Helper: Update Status Bar
-    # ─────────────────────────────────────────────────────────
     def _set_status(self, text: str):
         self.root.after(0, lambda: self.status_var.set(text))
 
@@ -483,9 +405,6 @@ class MedicineReminderApp:
         n = len(self.medicines)
         self.count_var.set(f"Medicines: {n}")
 
-    # ─────────────────────────────────────────────────────────
-    #  Clean Shutdown
-    # ─────────────────────────────────────────────────────────
     def on_closing(self):
         if messagebox.askokcancel("Quit MediMind",
                                   "Are you sure you want to close MediMind?\n"
@@ -493,10 +412,6 @@ class MedicineReminderApp:
             self.running = False
             self.root.destroy()
 
-
-# ─────────────────────────────────────────────────────────────
-#  Entry Point
-# ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     root = tk.Tk()
     app  = MedicineReminderApp(root)
